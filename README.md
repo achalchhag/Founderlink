@@ -33,6 +33,8 @@ mvn -pl api-gateway spring-boot:run
 
 The Config Server runs on `8888`, Eureka on `8761`, and the API Gateway on `8080`.
 
+The API Gateway imports its infrastructure configuration from Config Server and registers with Eureka. Docker Compose starts the same topology with service-name based URLs.
+
 ## Build
 
 ```bash
