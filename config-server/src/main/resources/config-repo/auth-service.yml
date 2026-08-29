@@ -27,3 +27,9 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+auth:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER}
+    access-token-seconds: ${AUTH_JWT_ACCESS_TOKEN_SECONDS:900}
+    private-key: ${AUTH_JWT_PRIVATE_KEY}
+    public-key: ${AUTH_JWT_PUBLIC_KEY}

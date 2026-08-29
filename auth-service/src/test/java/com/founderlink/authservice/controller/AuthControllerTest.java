@@ -7,10 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.founderlink.authservice.dto.response.AuthTokenResponse;
 import com.founderlink.authservice.dto.response.UserResponse;
 import com.founderlink.authservice.enums.AccountStatus;
 import com.founderlink.authservice.enums.Role;
 import com.founderlink.authservice.exception.GlobalExceptionHandler;
+import com.founderlink.authservice.exception.InvalidCredentialsException;
 import com.founderlink.authservice.service.AuthService;
 import java.time.Instant;
 import java.util.UUID;
@@ -51,6 +53,43 @@ class AuthControllerTest {
     }
 
     @Test
+    void logsInAndReturnsOnlyTokenData() throws Exception {
+        when(authService.login(any())).thenReturn(new AuthTokenResponse("signed.jwt.token", "Bearer", 900));
+
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"rahul@example.com\",\"password\":\"StrongPassword123!\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value("signed.jwt.token"))
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresIn").value(900))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    void returnsUnauthorizedForInvalidCredentials() throws Exception {
+        when(authService.login(any())).thenThrow(new InvalidCredentialsException());
+
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"rahul@example.com\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"))
+                .andExpect(jsonPath("$.path").value("/api/auth/login"))
+                .andExpect(jsonPath("$.stackTrace").doesNotExist());
+    }
+
+    @Test
+    void rejectsInvalidLoginEmail() throws Exception {
+        assertLoginValidationError("{\"email\":\"invalid-email\",\"password\":\"StrongPassword123!\"}");
+    }
+
+    @Test
+    void rejectsBlankLoginPassword() throws Exception {
+        assertLoginValidationError("{\"email\":\"rahul@example.com\",\"password\":\" \"}");
+    }
+
+    @Test
     void rejectsInvalidEmail() throws Exception { assertValidationError("{\"fullName\":\"Rahul Sharma\",\"email\":\"invalid-email\",\"password\":\"StrongPassword123!\",\"role\":\"FOUNDER\"}"); }
     @Test
     void rejectsBlankFullName() throws Exception { assertValidationError("{\"fullName\":\" \",\"email\":\"rahul@example.com\",\"password\":\"StrongPassword123!\",\"role\":\"FOUNDER\"}"); }
@@ -70,6 +109,14 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.path").value("/api/auth/register"))
                 .andExpect(jsonPath("$.fieldErrors").isMap())
                 .andExpect(jsonPath("$.stackTrace").doesNotExist());
+    }
+
+    private void assertLoginValidationError(String content) throws Exception {
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(content))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.path").value("/api/auth/login"));
     }
 
     private String validRequest() {

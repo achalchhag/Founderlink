@@ -83,6 +83,10 @@ services:
       DB_URL: jdbc:postgresql://auth-postgres:5432/${DB_NAME:-founderlink_auth}
       DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:?AUTH_JWT_ISSUER must be set}
+      AUTH_JWT_ACCESS_TOKEN_SECONDS: ${AUTH_JWT_ACCESS_TOKEN_SECONDS:-900}
+      AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:?AUTH_JWT_PRIVATE_KEY must be set}
+      AUTH_JWT_PUBLIC_KEY: ${AUTH_JWT_PUBLIC_KEY:?AUTH_JWT_PUBLIC_KEY must be set}
     ports:
       - "8081:8081"
     depends_on:
