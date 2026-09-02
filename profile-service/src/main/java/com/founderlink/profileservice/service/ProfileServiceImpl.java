@@ -2,6 +2,7 @@ package com.founderlink.profileservice.service;
 
 import com.founderlink.profileservice.dto.request.CreateProfileRequest;
 import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
+import com.founderlink.profileservice.dto.request.ProfileSearchRequest;
 import com.founderlink.profileservice.dto.response.ProfileResponse;
 import com.founderlink.profileservice.entity.Profile;
 import com.founderlink.profileservice.exception.DuplicateProfileException;
@@ -9,6 +10,7 @@ import com.founderlink.profileservice.exception.ProfileNotFoundException;
 import com.founderlink.profileservice.mapper.ProfileMapper;
 import com.founderlink.profileservice.repository.ProfileRepository;
 import java.util.UUID;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +62,15 @@ public class ProfileServiceImpl implements ProfileService {
     @Transactional(readOnly = true)
     public ProfileResponse getByUserId(UUID userId) {
         return mapper.toResponse(find(userId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProfileResponse> search(ProfileSearchRequest request) {
+        return profiles.search(normalize(request.location()), normalize(request.skill()), normalize(request.headline()))
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     private Profile find(UUID userId) {

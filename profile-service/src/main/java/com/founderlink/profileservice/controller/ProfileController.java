@@ -2,6 +2,7 @@ package com.founderlink.profileservice.controller;
 
 import com.founderlink.profileservice.dto.request.CreateProfileRequest;
 import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
+import com.founderlink.profileservice.dto.request.ProfileSearchRequest;
 import com.founderlink.profileservice.dto.response.ProfileResponse;
 import com.founderlink.profileservice.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -71,8 +74,14 @@ public class ProfileController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "Get profile by user ID", description = "Requires an authenticated access token.")
-    public ResponseEntity<ProfileResponse> getByUserId(@Parameter(description = "Auth Service user UUID") @PathVariable UUID userId) {
+    public ResponseEntity<ProfileResponse> getByUserId(@Parameter(description = "Auth Service user UUID") @PathVariable("userId") UUID userId) {
         return ResponseEntity.ok(profileService.getByUserId(userId));
+    }
+
+    @GetMapping
+    @Operation(summary = "Search founder profiles", description = "Searches profiles by optional location, skill, and headline filters.")
+    public ResponseEntity<List<ProfileResponse>> search(@Valid @ModelAttribute ProfileSearchRequest request) {
+        return ResponseEntity.ok(profileService.search(request));
     }
 
     private UUID authenticatedUserId(Jwt jwt) {

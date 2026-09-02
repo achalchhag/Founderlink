@@ -10,6 +10,10 @@ spring:
           uri: lb://PROFILE-SERVICE
           predicates:
             - Path=/api/profiles/**
+        - id: discovery-service
+          uri: lb://DISCOVERY-SERVICE
+          predicates:
+            - Path=/api/discovery/**
       discovery:
         locator:
           enabled: true
