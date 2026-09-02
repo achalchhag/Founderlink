@@ -80,6 +80,19 @@ class AuthControllerTest {
     }
 
     @Test
+    void returnsUnauthorizedWhenInvalidCredentialsAreWrapped() throws Exception {
+        when(authService.login(any())).thenThrow(new RuntimeException(new InvalidCredentialsException()));
+
+        mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"rahul@example.com\",\"password\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Invalid email or password"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
     void rejectsInvalidLoginEmail() throws Exception {
         assertLoginValidationError("{\"email\":\"invalid-email\",\"password\":\"StrongPassword123!\"}");
     }

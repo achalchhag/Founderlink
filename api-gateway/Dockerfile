@@ -5,6 +5,8 @@ COPY pom.xml ./pom.xml
 COPY config-server/pom.xml ./config-server/pom.xml
 COPY discovery-server/pom.xml ./discovery-server/pom.xml
 COPY api-gateway/pom.xml ./api-gateway/pom.xml
+COPY auth-service/pom.xml ./auth-service/pom.xml
+COPY profile-service/pom.xml ./profile-service/pom.xml
 RUN mvn --batch-mode -pl api-gateway -am dependency:go-offline
 
 COPY api-gateway/src ./api-gateway/src

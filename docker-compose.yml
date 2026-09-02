@@ -103,6 +103,52 @@ services:
       retries: 10
       start_period: 60s
 
+  profile-postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${PROFILE_DB_NAME:-founderlink_profile}
+      POSTGRES_USER: ${DB_USERNAME:?DB_USERNAME must be set}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+    ports:
+      - "5433:5432"
+    volumes:
+      - profile-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  profile-service:
+    build:
+      context: .
+      dockerfile: profile-service/Dockerfile
+    environment:
+      SERVER_PORT: 8082
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka/
+      DB_URL: jdbc:postgresql://profile-postgres:5432/${PROFILE_DB_NAME:-founderlink_profile}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:?AUTH_JWT_ISSUER must be set}
+      AUTH_JWT_PUBLIC_KEY: ${AUTH_JWT_PUBLIC_KEY:?AUTH_JWT_PUBLIC_KEY must be set}
+    ports:
+      - "8082:8082"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      profile-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   auth-postgres-data:
+  profile-postgres-data:
 

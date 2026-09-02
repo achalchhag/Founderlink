@@ -17,6 +17,7 @@
         <module>discovery-server</module>
         <module>api-gateway</module>
         <module>auth-service</module>
+        <module>profile-service</module>
     </modules>
 
     <properties>
@@ -53,6 +54,13 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
