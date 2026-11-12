@@ -19,6 +19,10 @@
         <module>auth-service</module>
         <module>profile-service</module>
         <module>discovery-service</module>
+        <module>startup-service</module>
+        <module>matching-service</module>
+        <module>chat-service</module>
+        <module>notification-service</module>
     </modules>
 
     <properties>

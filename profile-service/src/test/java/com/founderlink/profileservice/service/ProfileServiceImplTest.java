@@ -7,13 +7,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.founderlink.profileservice.dto.request.CreateProfileRequest;
-import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
-import com.founderlink.profileservice.dto.response.ProfileResponse;
 import com.founderlink.profileservice.entity.Profile;
 import com.founderlink.profileservice.exception.DuplicateProfileException;
 import com.founderlink.profileservice.exception.ProfileNotFoundException;
-import com.founderlink.profileservice.mapper.ProfileMapper;
 import com.founderlink.profileservice.repository.ProfileRepository;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,16 +30,16 @@ class ProfileServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProfileServiceImpl(profiles, new ProfileMapper());
+        service = new ProfileServiceImpl(profiles);
     }
 
     @Test
     void createsProfileForAuthenticatedUser() {
         when(profiles.save(any(Profile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProfileResponse response = service.create(userId, createRequest());
+        Profile response = service.create(userId, createProfile());
 
-        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.getUserId()).isEqualTo(userId);
         verify(profiles).existsByUserId(userId);
         verify(profiles).save(any(Profile.class));
     }
@@ -52,7 +48,7 @@ class ProfileServiceImplTest {
     void rejectsDuplicateProfileCreation() {
         when(profiles.existsByUserId(userId)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.create(userId, createRequest())).isInstanceOf(DuplicateProfileException.class);
+        assertThatThrownBy(() -> service.create(userId, createProfile())).isInstanceOf(DuplicateProfileException.class);
         verify(profiles, never()).save(any());
     }
 
@@ -60,10 +56,15 @@ class ProfileServiceImplTest {
     void getsAndUpdatesOwnProfile() {
         Profile profile = new Profile(userId);
         when(profiles.findByUserId(userId)).thenReturn(Optional.of(profile));
+        when(profiles.save(any(Profile.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProfileResponse response = service.update(userId, new UpdateProfileRequest("Updated", null, null, null, 4, null, null, null));
+        Profile updateInput = new Profile();
+        updateInput.setHeadline("Updated");
+        updateInput.setExperienceYears(4);
 
-        assertThat(response.userId()).isEqualTo(userId);
+        Profile response = service.update(userId, updateInput);
+
+        assertThat(response.getUserId()).isEqualTo(userId);
         assertThat(profile.getHeadline()).isEqualTo("Updated");
         assertThat(profile.getExperienceYears()).isEqualTo(4);
     }
@@ -73,9 +74,9 @@ class ProfileServiceImplTest {
         Profile profile = new Profile(userId);
         when(profiles.findByUserId(userId)).thenReturn(Optional.of(profile));
 
-        ProfileResponse response = service.getMine(userId);
+        Profile response = service.getMine(userId);
 
-        assertThat(response.userId()).isEqualTo(userId);
+        assertThat(response.getUserId()).isEqualTo(userId);
     }
 
     @Test
@@ -95,8 +96,16 @@ class ProfileServiceImplTest {
         assertThatThrownBy(() -> service.getMine(userId)).isInstanceOf(ProfileNotFoundException.class);
     }
 
-    private CreateProfileRequest createRequest() {
-        return new CreateProfileRequest("Founder", "Bio", "Mumbai", "Java", 3,
-                "https://example.com", "https://linkedin.com/in/example", "https://github.com/example");
+    private Profile createProfile() {
+        Profile profile = new Profile(userId);
+        profile.setHeadline("Founder");
+        profile.setBio("Bio");
+        profile.setLocation("Mumbai");
+        profile.setSkills("Java");
+        profile.setExperienceYears(3);
+        profile.setWebsiteUrl("https://example.com");
+        profile.setLinkedinUrl("https://linkedin.com/in/example");
+        profile.setGithubUrl("https://github.com/example");
+        return profile;
     }
 }

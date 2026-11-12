@@ -9,9 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.founderlink.profileservice.config.SecurityConfiguration;
-import com.founderlink.profileservice.dto.response.ProfileResponse;
+import com.founderlink.profileservice.entity.Profile;
 import com.founderlink.profileservice.service.ProfileService;
-import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +49,11 @@ class ProfileControllerTest {
     void derivesProfileOwnerFromJwtInsteadOfRequestBody() throws Exception {
         UUID authenticatedUserId = UUID.randomUUID();
         UUID attemptedUserId = UUID.randomUUID();
-        ProfileResponse response = new ProfileResponse(UUID.randomUUID(), authenticatedUserId, "Founder", null, null,
-                null, 3, null, null, null, Instant.now(), Instant.now());
-        when(profileService.create(eq(authenticatedUserId), any())).thenReturn(response);
+        Profile response = new Profile(authenticatedUserId);
+        response.setHeadline("Founder");
+        response.setExperienceYears(3);
+
+        when(profileService.create(eq(authenticatedUserId), any(Profile.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/profiles")
                         .with(jwt().jwt(jwt -> jwt.subject(authenticatedUserId.toString())))

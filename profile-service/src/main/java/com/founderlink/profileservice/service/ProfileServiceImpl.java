@@ -1,16 +1,11 @@
 package com.founderlink.profileservice.service;
 
-import com.founderlink.profileservice.dto.request.CreateProfileRequest;
-import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
-import com.founderlink.profileservice.dto.request.ProfileSearchRequest;
-import com.founderlink.profileservice.dto.response.ProfileResponse;
 import com.founderlink.profileservice.entity.Profile;
 import com.founderlink.profileservice.exception.DuplicateProfileException;
 import com.founderlink.profileservice.exception.ProfileNotFoundException;
-import com.founderlink.profileservice.mapper.ProfileMapper;
 import com.founderlink.profileservice.repository.ProfileRepository;
-import java.util.UUID;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,38 +13,36 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository profiles;
-    private final ProfileMapper mapper;
 
-    public ProfileServiceImpl(ProfileRepository profiles, ProfileMapper mapper) {
+    public ProfileServiceImpl(ProfileRepository profiles) {
         this.profiles = profiles;
-        this.mapper = mapper;
     }
 
     @Override
     @Transactional
-    public ProfileResponse create(UUID userId, CreateProfileRequest request) {
+    public Profile create(UUID userId, Profile input) {
         if (profiles.existsByUserId(userId)) {
             throw new DuplicateProfileException();
         }
         Profile profile = new Profile(userId);
-        apply(profile, request.headline(), request.bio(), request.location(), request.skills(), request.experienceYears(),
-                request.websiteUrl(), request.linkedinUrl(), request.githubUrl());
-        return mapper.toResponse(profiles.save(profile));
+        apply(profile, input.getHeadline(), input.getBio(), input.getLocation(), input.getSkills(), input.getExperienceYears(),
+                input.getWebsiteUrl(), input.getLinkedinUrl(), input.getGithubUrl());
+        return profiles.save(profile);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ProfileResponse getMine(UUID userId) {
-        return mapper.toResponse(find(userId));
+    public Profile getMine(UUID userId) {
+        return find(userId);
     }
 
     @Override
     @Transactional
-    public ProfileResponse update(UUID userId, UpdateProfileRequest request) {
+    public Profile update(UUID userId, Profile updates) {
         Profile profile = find(userId);
-        apply(profile, request.headline(), request.bio(), request.location(), request.skills(), request.experienceYears(),
-                request.websiteUrl(), request.linkedinUrl(), request.githubUrl());
-        return mapper.toResponse(profile);
+        apply(profile, updates.getHeadline(), updates.getBio(), updates.getLocation(), updates.getSkills(), updates.getExperienceYears(),
+                updates.getWebsiteUrl(), updates.getLinkedinUrl(), updates.getGithubUrl());
+        return profiles.save(profile);
     }
 
     @Override
@@ -60,17 +53,20 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProfileResponse getByUserId(UUID userId) {
-        return mapper.toResponse(find(userId));
+    public Profile getByUserId(UUID userId) {
+        return find(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProfileResponse> search(ProfileSearchRequest request) {
-        return profiles.search(normalize(request.location()), normalize(request.skill()), normalize(request.headline()))
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+    public List<Profile> search(String location, String skill, String headline) {
+        String loc = normalize(location);
+        String sk = normalize(skill);
+        String hl = normalize(headline);
+        if (loc == null && sk == null && hl == null) {
+            return profiles.findAllByOrderByCreatedAtDesc();
+        }
+        return profiles.search(loc, sk, hl);
     }
 
     private Profile find(UUID userId) {

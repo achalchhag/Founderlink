@@ -1,17 +1,20 @@
 package com.founderlink.profileservice.service;
 
-import com.founderlink.profileservice.dto.request.CreateProfileRequest;
-import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
-import com.founderlink.profileservice.dto.request.ProfileSearchRequest;
-import com.founderlink.profileservice.dto.response.ProfileResponse;
+import com.founderlink.profileservice.entity.Profile;
 import java.util.List;
 import java.util.UUID;
 
 public interface ProfileService {
-    ProfileResponse create(UUID userId, CreateProfileRequest request);
-    ProfileResponse getMine(UUID userId);
-    ProfileResponse update(UUID userId, UpdateProfileRequest request);
+
+    Profile create(UUID userId, Profile profile);
+
+    Profile getMine(UUID userId);
+
+    Profile update(UUID userId, Profile updates);
+
     void delete(UUID userId);
-    ProfileResponse getByUserId(UUID userId);
-    List<ProfileResponse> search(ProfileSearchRequest request);
+
+    Profile getByUserId(UUID userId);
+
+    List<Profile> search(String location, String skill, String headline);
 }

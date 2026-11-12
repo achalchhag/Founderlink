@@ -1,9 +1,6 @@
 package com.founderlink.profileservice.controller;
 
-import com.founderlink.profileservice.dto.request.CreateProfileRequest;
-import com.founderlink.profileservice.dto.request.UpdateProfileRequest;
-import com.founderlink.profileservice.dto.request.ProfileSearchRequest;
-import com.founderlink.profileservice.dto.response.ProfileResponse;
+import com.founderlink.profileservice.entity.Profile;
 import com.founderlink.profileservice.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,9 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
-import java.util.UUID;
 import java.util.List;
-import org.springframework.http.HttpStatus;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,7 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -41,27 +37,30 @@ public class ProfileController {
 
     @PostMapping
     @Operation(summary = "Create my profile", description = "Creates a profile for the authenticated JWT subject.")
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Profile created"),
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Profile created"),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
             @ApiResponse(responseCode = "401", description = "Authentication required"),
-            @ApiResponse(responseCode = "409", description = "Profile already exists")})
-    public ResponseEntity<ProfileResponse> create(@AuthenticationPrincipal Jwt jwt,
-                                                   @Valid @RequestBody CreateProfileRequest request) {
+            @ApiResponse(responseCode = "409", description = "Profile already exists")
+    })
+    public ResponseEntity<Profile> create(@AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestBody Profile profile) {
         UUID userId = authenticatedUserId(jwt);
-        ProfileResponse response = profileService.create(userId, request);
+        Profile response = profileService.create(userId, profile);
         return ResponseEntity.created(URI.create("/api/profiles/" + userId)).body(response);
     }
 
     @GetMapping("/me")
     @Operation(summary = "Get my profile")
-    public ResponseEntity<ProfileResponse> getMine(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Profile> getMine(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.ok(profileService.getMine(authenticatedUserId(jwt)));
     }
 
     @PutMapping("/me")
     @Operation(summary = "Update my profile", description = "Updates only the profile owned by the authenticated JWT subject.")
-    public ResponseEntity<ProfileResponse> update(@AuthenticationPrincipal Jwt jwt,
-                                                   @Valid @RequestBody UpdateProfileRequest request) {
-        return ResponseEntity.ok(profileService.update(authenticatedUserId(jwt), request));
+    public ResponseEntity<Profile> update(@AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestBody Profile updates) {
+        return ResponseEntity.ok(profileService.update(authenticatedUserId(jwt), updates));
     }
 
     @DeleteMapping("/me")
@@ -74,14 +73,18 @@ public class ProfileController {
 
     @GetMapping("/{userId}")
     @Operation(summary = "Get profile by user ID", description = "Requires an authenticated access token.")
-    public ResponseEntity<ProfileResponse> getByUserId(@Parameter(description = "Auth Service user UUID") @PathVariable("userId") UUID userId) {
+    public ResponseEntity<Profile> getByUserId(
+            @Parameter(description = "Auth Service user UUID") @PathVariable("userId") UUID userId) {
         return ResponseEntity.ok(profileService.getByUserId(userId));
     }
 
     @GetMapping
     @Operation(summary = "Search founder profiles", description = "Searches profiles by optional location, skill, and headline filters.")
-    public ResponseEntity<List<ProfileResponse>> search(@Valid @ModelAttribute ProfileSearchRequest request) {
-        return ResponseEntity.ok(profileService.search(request));
+    public ResponseEntity<List<Profile>> search(
+            @RequestParam(value = "location", required = false) String location,
+            @RequestParam(value = "skill", required = false) String skill,
+            @RequestParam(value = "headline", required = false) String headline) {
+        return ResponseEntity.ok(profileService.search(location, skill, headline));
     }
 
     private UUID authenticatedUserId(Jwt jwt) {

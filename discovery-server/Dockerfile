@@ -7,6 +7,13 @@ COPY discovery-server/pom.xml ./discovery-server/pom.xml
 COPY api-gateway/pom.xml ./api-gateway/pom.xml
 COPY auth-service/pom.xml ./auth-service/pom.xml
 COPY profile-service/pom.xml ./profile-service/pom.xml
+COPY discovery-service/pom.xml ./discovery-service/pom.xml
+COPY startup-service/pom.xml ./startup-service/pom.xml
+COPY matching-service/pom.xml ./matching-service/pom.xml
+COPY chat-service/pom.xml ./chat-service/pom.xml
+COPY notification-service/pom.xml ./notification-service/pom.xml
+
+RUN mvn --batch-mode -pl discovery-server -am dependency:go-offline
 
 COPY discovery-server/src ./discovery-server/src
 RUN mvn --batch-mode -pl discovery-server -am package -DskipTests

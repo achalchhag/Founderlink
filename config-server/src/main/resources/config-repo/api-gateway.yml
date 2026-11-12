@@ -14,6 +14,22 @@ spring:
           uri: lb://DISCOVERY-SERVICE
           predicates:
             - Path=/api/discovery/**
+        - id: startup-service
+          uri: lb://STARTUP-SERVICE
+          predicates:
+            - Path=/api/startups/**
+        - id: matching-service
+          uri: lb://MATCHING-SERVICE
+          predicates:
+            - Path=/api/matching/**
+        - id: chat-service
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=/api/chat/**
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/notifications/**
       discovery:
         locator:
           enabled: true

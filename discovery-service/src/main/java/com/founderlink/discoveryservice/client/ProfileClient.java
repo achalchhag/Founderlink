@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "PROFILE-SERVICE")
+@FeignClient(name = "profile-service", url = "${PROFILE_SERVICE_URL:http://profile-service:8082}")
 public interface ProfileClient {
 
     @GetMapping("/api/profiles/{userId}")
